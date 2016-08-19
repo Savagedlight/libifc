@@ -1,6 +1,14 @@
 checkstyle:
 	uncrustify --check -q -c tools/uncrustify_freebsd.cfg `find src/ -name "*.[c|h]"`
-createfreebsdtree
+createfreebsdtree:
 	mkdir -p stage/freebsdsrc/lib/libifc
 	mkdir -p stage/freebsdsrc/examples/libifc
 	
+	cp src/* stage/freebsdsrc/lib/libifc/
+	cp Makefile.base stage/freebsdsrc/lib/libifc/Makefile
+	cp examples/* stage/freebsdsrc/examples/libifc/
+buildlibinbase:
+	svnlite up /media/fbsdhead
+	./tools/cptofbsdsrc.sh . /media/fbsdhead
+	cd /media/fbsdhead/lib/libifc
+	make

@@ -15,10 +15,19 @@ buildlib:
   - freebsd
  script:
   - make
+  - tree stage/libifc
  artifacts:
   name: "libifc"
   paths:
    - stage/libifc/
+
+buildlib_in_base:
+ stage: build
+ tags:
+  - shell
+  - freebsd
+script:
+  make -f Makefile.ci buildbaselib
 
 verify_style9:
  stage: test
@@ -26,7 +35,7 @@ verify_style9:
   - shell
   - uncrustify
  script:
-  - make checkstyle
+  - make -f Makefile.ci checkstyle
 
 doxygen:
  stage: release
@@ -38,3 +47,14 @@ doxygen:
  artifacts:
   paths:
    - stage/doxygen/
+
+freebsd_base_dist:
+ stage: release
+ tags:
+  - shell
+ script:
+  - make -f Makefile.ci createfreebsdtree
+  - tree stage/freebsdsrc
+ artefacts:
+  paths:
+   - stage/freebsdsrc
