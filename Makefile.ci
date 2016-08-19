@@ -9,6 +9,6 @@ createfreebsdtree:
 	cp examples/* stage/freebsdsrc/examples/libifc/
 buildlibinbase:
 	svnlite up /media/fbsdhead
-	./tools/cptofbsdsrc.sh . /media/fbsdhead
+	./tools/cptofbsdsrc.sh ./ /media/fbsdhead
 	cd /media/fbsdhead/lib/libifc
 	make
