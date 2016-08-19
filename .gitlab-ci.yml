@@ -27,7 +27,7 @@ buildlib_in_base:
   - shell
   - freebsd
  script:
-  make -f Makefile.ci buildbaselib
+  make -f Makefile.ci buildlibinbase
 
 verify_style9:
  stage: test
