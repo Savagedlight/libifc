@@ -1,0 +1,6 @@
+checkstyle:
+	uncrustify --check -q -c tools/uncrustify_freebsd.cfg `find src/ -name "*.[c|h]"`
+createfreebsdtree
+	mkdir -p stage/freebsdsrc/lib/libifc
+	mkdir -p stage/freebsdsrc/examples/libifc
+	

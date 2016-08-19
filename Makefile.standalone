@@ -5,8 +5,6 @@ default:
 	cp src/libifc.h stage/libifc/
 clean:
 	rm -Rf stage
-checkstyle:
-	uncrustify --check -q -c tools/uncrustify_freebsd.cfg `find . -name "*.[c|h]"`
 doxygen:
 	rm -Rf stage/doxygen
 	mkdir -p stage/doxygen
