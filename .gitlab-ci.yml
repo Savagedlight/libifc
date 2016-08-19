@@ -26,7 +26,7 @@ buildlib_in_base:
  tags:
   - shell
   - freebsd
-script:
+ script:
   make -f Makefile.ci buildbaselib
 
 verify_style9:
@@ -55,6 +55,6 @@ freebsd_base_dist:
  script:
   - make -f Makefile.ci createfreebsdtree
   - tree stage/freebsdsrc
- artefacts:
+ artifacts:
   paths:
    - stage/freebsdsrc
