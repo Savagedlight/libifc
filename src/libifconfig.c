@@ -30,9 +30,12 @@
  * $FreeBSD$
  */
 
+#include <sys/types.h>
 #include <sys/ioctl.h>
+#include <sys/sysctl.h>
 
 #include <net/if.h>
+#include <net/if_mib.h>
 
 #include <err.h>
 #include <errno.h>
@@ -227,6 +230,67 @@ ifconfig_set_name(ifconfig_handle_t *h, const char *name, const char *newname)
 
 	free(tmpname);
 	return (0);
+}
+
+int
+ifconfig_get_orig_name(ifconfig_handle_t *h, const char *ifname,
+    char **orig_name)
+{
+	struct ifmibdata ifmd;
+	size_t len;
+	int name[6];
+	int i, maxifno;
+
+	name[0] = CTL_NET;
+	name[1] = PF_LINK;
+	name[2] = NETLINK_GENERIC;
+	name[3] = IFMIB_SYSTEM;
+	name[4] = IFMIB_IFCOUNT;
+
+	len = sizeof maxifno;
+	if (sysctl(name, 5, &maxifno, &len, 0, 0) < 0) {
+		h->error.errtype = OTHER;
+		h->error.errcode = errno;
+		return (-1);
+	}
+
+	name[3] = IFMIB_IFDATA;
+	name[5] = IFDATA_GENERAL;
+	for (i = 1; i <= maxifno; i++) {
+		len = sizeof ifmd;
+		name[4] = i;
+		if (sysctl(name, 6, &ifmd, &len, 0, 0) < 0) {
+			if (errno == ENOENT)
+				continue;
+
+			goto fail;
+		}
+
+		if (strncmp(ifmd.ifmd_name, ifname, IFNAMSIZ) != 0)
+			continue;
+
+		len = 0;
+		name[5] = IFDATA_DRIVERNAME;
+		if (sysctl(name, 6, NULL, &len, 0, 0) < 0)
+			goto fail;
+
+		*orig_name = malloc(len);
+		if (*orig_name == NULL)
+			goto fail;
+
+		if (sysctl(name, 6, *orig_name, &len, 0, 0) < 0) {
+			free(*orig_name);
+			*orig_name = NULL;
+			goto fail;
+		}
+
+		return (0);
+	}
+
+fail:
+	h->error.errtype = OTHER;
+	h->error.errcode = (i <= maxifno) ? errno : ENOENT;
+	return (-1);
 }
 
 int
