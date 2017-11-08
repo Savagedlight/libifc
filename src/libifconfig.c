@@ -236,60 +236,40 @@ int
 ifconfig_get_orig_name(ifconfig_handle_t *h, const char *ifname,
     char **orig_name)
 {
-	struct ifmibdata ifmd;
 	size_t len;
+	unsigned int ifindex;
 	int name[6];
-	int i, maxifno;
+
+	ifindex = if_nametoindex(ifname);
+	if (ifindex == 0)
+		goto fail;
 
 	name[0] = CTL_NET;
 	name[1] = PF_LINK;
 	name[2] = NETLINK_GENERIC;
-	name[3] = IFMIB_SYSTEM;
-	name[4] = IFMIB_IFCOUNT;
-
-	len = sizeof maxifno;
-	if (sysctl(name, 5, &maxifno, &len, 0, 0) < 0) {
-		h->error.errtype = OTHER;
-		h->error.errcode = errno;
-		return (-1);
-	}
-
 	name[3] = IFMIB_IFDATA;
-	name[5] = IFDATA_GENERAL;
-	for (i = 1; i <= maxifno; i++) {
-		len = sizeof ifmd;
-		name[4] = i;
-		if (sysctl(name, 6, &ifmd, &len, 0, 0) < 0) {
-			if (errno == ENOENT)
-				continue;
+	name[4] = ifindex;
+	name[5] = IFDATA_DRIVERNAME;
 
-			goto fail;
-		}
+	len = 0;
+	if (sysctl(name, 6, NULL, &len, 0, 0) < 0)
+		goto fail;
 
-		if (strncmp(ifmd.ifmd_name, ifname, IFNAMSIZ) != 0)
-			continue;
+	*orig_name = malloc(len);
+	if (*orig_name == NULL)
+		goto fail;
 
-		len = 0;
-		name[5] = IFDATA_DRIVERNAME;
-		if (sysctl(name, 6, NULL, &len, 0, 0) < 0)
-			goto fail;
-
-		*orig_name = malloc(len);
-		if (*orig_name == NULL)
-			goto fail;
-
-		if (sysctl(name, 6, *orig_name, &len, 0, 0) < 0) {
-			free(*orig_name);
-			*orig_name = NULL;
-			goto fail;
-		}
-
-		return (0);
+	if (sysctl(name, 6, *orig_name, &len, 0, 0) < 0) {
+		free(*orig_name);
+		*orig_name = NULL;
+		goto fail;
 	}
+
+	return (0);
 
 fail:
 	h->error.errtype = OTHER;
-	h->error.errcode = (i <= maxifno) ? errno : ENOENT;
+	h->error.errcode = (errno != 0) ? errno : ENOENT;
 	return (-1);
 }
 
